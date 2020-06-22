@@ -1,7 +1,3 @@
-//mongojs 2.4.0
-// passport used for authentication
-//flash and express messages work together
-
 var express = require('express');
 var path = require('path');
 var expressValidator = require('express-validator');
@@ -39,7 +35,24 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
+//express validator
+//npm install express-validator@2.20.8
+app.use(expressValidator({
+  errorFormatter: function(param, msg, value) {
+      var namespace = param.split('.')
+      , root    = namespace.shift()
+      , formParam = root;
 
+    while(namespace.length) {
+      formParam += '[' + namespace.shift() + ']';
+    }
+    return {
+      param : formParam,
+      msg   : msg,
+      value : value
+    };
+  }
+}));
 
 //connect-flash
 app.use(flash());
@@ -48,7 +61,12 @@ app.use(function(req,res, next){
 	next();
 });
 
+//global variable for fetching data
 
+app.get('*', function(req,res,next){
+  res.locals.user = req.user || null;
+  next();
+})
 
 //define routes
 app.use('/', routes);
